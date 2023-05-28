@@ -1,6 +1,6 @@
 EXEFILE = main
 OBJECTS = main.o f.o
-CCFMT = -m64
+CCFMT = -no-pie -m64
 NASMFMT = -f elf64
 CCOPT =
 NASMOPT = -w+all
