@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
     // Konwencja w Allegro : 00 to lewy gorny
     for (int row = 0; row < height; row++){
         for (int column = 0; column < width; column++){
-            uint8_t r = (row*width + column)*3;
-            uint8_t g = r + 1;
-            uint8_t b = r + 2;
-            al_draw_pixel(column, row, al_map_rgb(pixels_result_picture[r], pixels_result_picture[g], pixels_result_picture[b]));
+            uint32_t r_index = (row*width + column)*3;
+            uint32_t g_index = r_index + 1;
+            uint32_t b_index = r_index + 2;
+            al_draw_pixel(column, row, al_map_rgb(pixels_result_picture[r_index], pixels_result_picture[g_index], pixels_result_picture[b_index]));
         }
     }
     al_flip_display();
