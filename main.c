@@ -28,9 +28,27 @@ void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above
     }
 }
 
-void get_input(uint16_t *input_coords){
-    input_coords[0] = 2; //x
-    input_coords[1] = 3; //y
+float get_input(uint16_t *input_coords){
+    /*
+    int x_input;
+    int y_input;
+    printf("Enter x: ");
+    scanf("%d", &x_input);
+    printf("Enter y: ");
+    scanf("%d", &y_input);
+    uint16_t x = x_input & 0xffff;
+    uint16_t y = y_input & 0xffff;
+
+    input_coords[0] = x;
+    input_coords[1] = y;*/
+    input_coords[0] = 2;
+    input_coords[1] = 4;
+
+    float alpha;
+    printf("Enter alpha: ");
+    scanf("%f", &alpha);
+    return alpha;
+
 }
 
 int main(int argc, char *argv[])
@@ -61,7 +79,7 @@ int main(int argc, char *argv[])
         pixels_result_picture[i] = pixels_picture_above[i];
     }
 
-    int max_loop_nr = 2;
+    int max_loop_nr = 5;
     for (int loop_nr = 0; loop_nr < max_loop_nr; loop_nr++) {
         // WYSWIETLANIE
         // Konwencja w Allegro : 00 to lewy gorny
@@ -77,8 +95,10 @@ int main(int argc, char *argv[])
         al_rest(5.0);
 
         // INPUT: WYBIERZ PUNKT ODNIESIENIA
-        get_input(input_coords);
-        float alpha_temporary = 0.5;
+        float alpha_temporary;
+        alpha_temporary = get_input(input_coords);
+        //float alpha_temporary = 0.5;
+        printf("x: %d, y: %d\n", input_coords[0], input_coords[1]);
 
         // skopiuj poczatkowy obrazek
         for (int i = 0; i < pixel_array_len; i++){
