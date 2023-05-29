@@ -41,8 +41,12 @@ int main(int argc, char *argv[])
         pixels_result_picture[i] = pixels_picture_above[i];
     }
     // ASSEMBLER, PRZETWARZANIE DANYCH
+    //printf("%d, %d, %d\n", pixels_result_picture[639*3], pixels_result_picture[639*3+1], pixels_result_picture[639*3+2]);
+    printf("%d, %d, %d\n", pixels_result_picture[600], pixels_result_picture[601], pixels_result_picture[602]);
     float alpha_temporary = 0.75;
     f(pixels_picture_under, pixels_result_picture, width, height, x_input, y_input, alpha_temporary);
+    // printf("%d, %d, %d\n", pixels_result_picture[639*3], pixels_result_picture[639*3+1], pixels_result_picture[639*3+2]);
+    printf("%d, %d, %d\n", pixels_result_picture[600], pixels_result_picture[601], pixels_result_picture[602]);
     // WYSWIETLANIE
     // Konwencja w Allegro : 00 to lewy gorny
     for (int row = 0; row < height; row++){

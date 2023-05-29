@@ -40,8 +40,9 @@ next_row:
 
 next_column:
         inc     r10 ; x++
-        cmp     r10, rdx ; x==width?
-        je      next_row
+        ;cmp     r10, rdx ; x==width?
+        cmp     r10, 639
+        je      fin
 
         mov     r12, r8 ; x_input
         sub     r12, r10 ; x_input - x
