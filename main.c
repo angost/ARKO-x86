@@ -28,8 +28,7 @@ void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above
     }
 }
 
-float get_input(uint16_t *input_coords){
-    /*
+void get_input(uint16_t *input_coords){
     int x_input;
     int y_input;
     printf("Enter x: ");
@@ -40,14 +39,7 @@ float get_input(uint16_t *input_coords){
     uint16_t y = y_input & 0xffff;
 
     input_coords[0] = x;
-    input_coords[1] = y;*/
-    input_coords[0] = 2;
-    input_coords[1] = 4;
-
-    float alpha;
-    printf("Enter alpha: ");
-    scanf("%f", &alpha);
-    return alpha;
+    input_coords[1] = y;
 
 }
 
@@ -95,8 +87,8 @@ int main(int argc, char *argv[])
         al_rest(5.0);
 
         // INPUT: WYBIERZ PUNKT ODNIESIENIA
-        float alpha_temporary;
-        alpha_temporary = get_input(input_coords);
+        float alpha_temporary = 0.5;
+        get_input(input_coords);
         //float alpha_temporary = 0.5;
         printf("x: %d, y: %d\n", input_coords[0], input_coords[1]);
 

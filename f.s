@@ -8,8 +8,12 @@
 ; R9 - uint16_t y_input -> r9w
 ; XMM0 - float alpha_temporary ALPHA - 32b
 section .data
-        ;temp resq 2
         one dd 1.0
+        two dd 2.0
+
+section .bss
+        sin_arg resd 1 ; 4B * 1
+        alpha_calculated   resd 1 ; 4B * 1
 
 section .text
         global  f
@@ -33,8 +37,17 @@ next_row:
 
         mov     r15w, r9w ; y_input
         sub     r15w, r11w ; y_input - y
-        jns     next_column
-        neg     r15w ; r15 - |y1-y2|
+
+        ; (y1-y2)^2
+        mov     r12w, dx
+        mov    ax, r15w
+        mul     r15w
+        shl     edx, 16
+        mov     r15d, edx
+        mov     r15w, ax
+        mov     dx, r12w
+        ;jns     next_column
+        ;neg     r15w ; r15: |y1-y2|
 
 ; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
 
@@ -45,15 +58,37 @@ next_column:
 
         mov     r12w, r8w ; x_input
         sub     r12w, r10w ; x_input - x
-        jns     calculate_alpha
-        neg     r12w ; r12 - |x1-x2|
+
+        ; (x1-x2)^2
+        mov     r14w, dx
+        mov     ax, r12w
+        mul     r12w
+        shl     edx, 16
+        mov     r12d, edx
+        mov     r12w, ax
+        mov     dx, r14w
+        ;jns     calculate_alpha
+        ;neg     r12w ; r12: |x1-x2|
 
 calculate_alpha:
-;in progress
+        ; CALCULATE DISTANCE
+        add     r12w, r15w ; [(x1-x2)^2 + (y1-y2)^2]
+        cvtsi2ss xmm3, r12d
+        sqrtss  xmm3, xmm3 ; xmm3 - sqrt([(x1-x2)^2 + (y1-y2)^2])
+        ; CALCULATE ALPHA (przeksztalcony sinus)
+        fldpi   ; pi
+        fdiv    dword [two] ;pi/2
+        movd    [sin_arg], xmm3
+        fadd    dword [sin_arg] ; pi/2 + distance
+        fsin    ; sin(pi/2 + distance)
+        fadd    dword [one] ; sin(pi/2 + distance) + 1
+        fdiv    dword [two] ; [sin(pi/2 + distance) + 1]/2
+        fst     dword [alpha_calculated]
+        movd    xmm3, [alpha_calculated]
 
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
-calculate_addr_in_pixel_array:
+calculate_offset_in_pixel_array:
         mov     r13w, r11w ; r13 = y
         mov     ax, r13w
         mov     r12w, dx ; zachowuje gdzies rdx, bo nadpisze sie przy mnozeniu
