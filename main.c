@@ -28,29 +28,29 @@ void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above
     }
 }
 
-void get_input(uint16_t *input_coords, uint16_t width, uint16_t height){
+// Pobiera koordynaty pktu odniesienia / konczy program jesli x v y = -1
+int get_input(uint16_t *input_coords, uint16_t width, uint16_t height){
     int x_input = -2;
     int y_input = -2;
 
     while (x_input < -1 || x_input >= width ){
-        printf("Enter x between <0, %d>: ", width-1);
+        printf("Enter x between <0, %d> or -1 to quit: ", width-1);
         scanf("%d", &x_input);
     }
+    if (x_input == -1)
+        return 1;
     while (y_input < -1 || y_input >= height ){
-        printf("Enter y between <0, %d>: ", height-1);
+        printf("Enter y between <0, %d> or -1 to quit: ", height-1);
         scanf("%d", &y_input);
     }
+    if (y_input == -1)
+        return 1;
 
-    if (x_input == -1 || y_input == -1){
-        input_coords[0] = -1;
-        input_coords[1] = -1;
-    } else {
-        uint16_t x = x_input & 0xffff;
-        uint16_t y = y_input & 0xffff;
-
-        input_coords[0] = x;
-        input_coords[1] = y;
-    }
+    uint16_t x = x_input & 0xffff;
+    uint16_t y = y_input & 0xffff;
+    input_coords[0] = x;
+    input_coords[1] = y;
+    return 0; // 0 - sukces
 }
 
 int main(int argc, char *argv[])
@@ -74,14 +74,13 @@ int main(int argc, char *argv[])
     al_init_primitives_addon();
 
     uint16_t input_coords[2];
-    input_coords[0] = -2; input_coords[1] = -2;
 
     // skopiuj poczatkowy obrazek
     for (int i = 0; i < pixel_array_len; i++){
         pixels_result_picture[i] = pixels_picture_above[i];
     }
 
-    while (input_coords[0] != -1 && input_coords[1] != -1) {
+    while (true) {
         // WYSWIETLANIE
         // Konwencja w Allegro : 00 to lewy gorny
         for (int row = 0; row < height; row++){
@@ -93,10 +92,10 @@ int main(int argc, char *argv[])
             }
         }
         al_flip_display();
-        al_rest(5.0);
 
         // INPUT: WYBIERZ PUNKT ODNIESIENIA
-        get_input(input_coords, width, height);
+        if (get_input(input_coords, width, height))
+            break;
         printf("x: %d, y: %d\n", input_coords[0], input_coords[1]);
 
         // skopiuj poczatkowy obrazek
