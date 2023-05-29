@@ -2,10 +2,10 @@
 ; void f:
 ; RDI - uint8_t *pixels_picture_under
 ; RSI - uint8_t *pixels_picture_above
-; RDX - uint16_t width
-; RCX - uint16_t height
-; R8 - uint16_t x_input
-; R9 - uint16_t y_input
+; RDX - uint16_t width -> dx
+; RCX - uint16_t height -> cx
+; R8 - uint16_t x_input -> r8w
+; R9 - uint16_t y_input -> r9w
 ; XMM0 - float alpha_temporary ALPHA - 32b
 section .data
         ;temp resq 2
@@ -21,32 +21,32 @@ f:
         push r13
         push r14
         push r15
-        mov   r11d, -1 ; licznik aktualnego wiersza (y) - uint16_t
+        mov   r11w, -1 ; licznik aktualnego wiersza (y) - uint16_t
 
 ; przechodze wszystkie kolumny w danym rzedzie, przechodze do kolejnego rzedu
 next_row:
-        inc     r11d ; y++
-        cmp     r11, rcx ; y==height?
+        inc     r11w ; y++
+        cmp     r11w, cx ; y==height?
         je      fin
 
-        mov   r10d, -1 ; licznik aktualnej kolumny (x) - uint16_t
+        mov   r10w, -1 ; licznik aktualnej kolumny (x) - uint16_t
 
-        mov     r15, r9 ; y_input
-        sub     r15, r11 ; y_input - y
+        mov     r15w, r9w ; y_input
+        sub     r15w, r11w ; y_input - y
         jns     next_column
-        neg     r15 ; r15 - |y1-y2|
+        neg     r15w ; r15 - |y1-y2|
 
 ; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
 
 next_column:
-        inc     r10d ; x++
-        cmp     r10d, edx ; x==width?
+        inc     r10w ; x++
+        cmp     r10w, dx ; x==width?
         je     next_row
 
-        mov     r12, r8 ; x_input
-        sub     r12, r10 ; x_input - x
+        mov     r12w, r8w ; x_input
+        sub     r12w, r10w ; x_input - x
         jns     calculate_alpha
-        neg     r12 ; r12 - |x1-x2|
+        neg     r12w ; r12 - |x1-x2|
 
 calculate_alpha:
 ;in progress
@@ -56,14 +56,14 @@ calculate_alpha:
 calculate_addr_in_pixel_array:
         mov     r13w, r11w ; r13 = y
         mov     ax, r13w
-        mov     r12, rdx ; zachowuje gdzies rdx, bo nadpisze sie przy mnozeniu
+        mov     r12w, dx ; zachowuje gdzies rdx, bo nadpisze sie przy mnozeniu
         mul     dx ; r13 = y*width
         ; wynik mnozenia 16b*16b jest 32b, jest w dx i ax, nizej operacje zeby zapisac te wyniki w r13
         shl     edx, 16
         mov     r13d, edx
         mov     r13w, ax
         ; restore rdx
-        mov     rdx, r12
+        mov     dx, r12w
 
         add     r13d, r10d ; r13 = y*width + x
         lea     r13d, [r13d + r13d*2] ;  r13 = (y*width + x)*3
