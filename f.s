@@ -21,15 +21,15 @@ f:
         push r13
         push r14
         push r15
-        mov   r11, -1 ; licznik aktualnego wiersza (y) - uint16_t
+        mov   r11d, -1 ; licznik aktualnego wiersza (y) - uint16_t
 
 ; przechodze wszystkie kolumny w danym rzedzie, przechodze do kolejnego rzedu
 next_row:
-        inc     r11 ; y++
+        inc     r11d ; y++
         cmp     r11, rcx ; y==height?
         je      fin
 
-        mov   r10, -1 ; licznik aktualnej kolumny (x) - uint16_t
+        mov   r10d, -1 ; licznik aktualnej kolumny (x) - uint16_t
 
         mov     r15, r9 ; y_input
         sub     r15, r11 ; y_input - y
@@ -39,10 +39,9 @@ next_row:
 ; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
 
 next_column:
-        inc     r10 ; x++
-        ;cmp     r10, rdx ; x==width?
-        cmp     r10, 639
-        je      fin
+        inc     r10d ; x++
+        cmp     r10d, edx ; x==width?
+        je     next_row
 
         mov     r12, r8 ; x_input
         sub     r12, r10 ; x_input - x
@@ -55,12 +54,19 @@ calculate_alpha:
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
 calculate_addr_in_pixel_array:
-        mov     r13, r11 ; r13 = y
-        mov     rax, r13
-        mul     rdx ; r13 = y*width
-        mov     r13, rax
-        add     r13, r10 ; r13 = y*width + x
-        lea     r13, [r13 + r13*2] ;  r13 = (y*width + x)*3
+        mov     r13w, r11w ; r13 = y
+        mov     ax, r13w
+        mov     r12, rdx ; zachowuje gdzies rdx, bo nadpisze sie przy mnozeniu
+        mul     dx ; r13 = y*width
+        ; wynik mnozenia 16b*16b jest 32b, jest w dx i ax, nizej operacje zeby zapisac te wyniki w r13
+        shl     edx, 16
+        mov     r13d, edx
+        mov     r13w, ax
+        ; restore rdx
+        mov     rdx, r12
+
+        add     r13d, r10d ; r13 = y*width + x
+        lea     r13d, [r13d + r13d*2] ;  r13 = (y*width + x)*3
 
         mov     bl, -1 ; iteracja petli zmieniania skladowych r,g,b
 
