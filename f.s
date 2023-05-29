@@ -21,25 +21,36 @@ f:
         push r13
         push r14
         push r15
-        mov   r10, 0 ; licznik aktualnej kolumny (x) - uint16_t
-        mov   r11, 0 ; licznik aktualnego wiersza (y) - uint16_t
-; mam licznik przerabianego piksela
-; obliczam na jego podstawie wspolrzedna x piksela
-; obliczam roznice miedzy x_input a x piksela
-; wstawiam ja do wzoru na sinus = obliczam alfa
-; pobieram kolejno r,g,b obrazka nad i pod, obliczam finaalna wartosc uzywajac alfa
-; nadpisuje wartosci pikseli w obrazku nad
-; ALBO po kolei 00,10,20,30 po linii poziomej
-; ALBO po linii pionowej -> efektywniej bo kazda ma taka sama wartosc alfa
-; = x=0, wszystkie y, x=1, wszystkie y, ...
+        mov   r11, -1 ; licznik aktualnego wiersza (y) - uint16_t
 
-current_coords:
+; przechodze wszystkie kolumny w danym rzedzie, przechodze do kolejnego rzedu
+next_row:
+        inc     r11 ; y++
+        cmp     r11, rcx ; y==height?
+        je      fin
+
+        mov   r10, -1 ; licznik aktualnej kolumny (x) - uint16_t
+
+        mov     r15, r9 ; y_input
+        sub     r15, r11 ; y_input - y
+        jns     next_column
+        neg     r15 ; r15 - |y1-y2|
+
+; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
+
 next_column:
-        mov     r12, r8
-        sub     r12, r10
+        inc     r10 ; x++
+        cmp     r10, rdx ; x==width?
+        je      next_row
+
+        mov     r12, r8 ; x_input
+        sub     r12, r10 ; x_input - x
         jns     calculate_alpha
         neg     r12 ; r12 - |x1-x2|
+
 calculate_alpha:
+;in progress
+
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
 calculate_addr_in_pixel_array:
@@ -50,9 +61,13 @@ calculate_addr_in_pixel_array:
         add     r13, r10 ; r13 = y*width + x
         lea     r13, [r13 + r13*2] ;  r13 = (y*width + x)*3
 
-        mov     bl, 0 ; iteracja petli zmieniania skladowych r,g,b
+        mov     bl, -1 ; iteracja petli zmieniania skladowych r,g,b
 
-;TODO zmienic kolejnosc zeby w r14 miec adres tablicy obrazka nad
+components_loop:
+        inc     bl
+        cmp     bl, 3
+        je      next_column
+
 get_previous_color_components: ; loop dla kolejno r,g,b
         ;adres skladowej = pierwszy el + offset + nr_skladowej
         ; dla obrazka_pod
@@ -99,8 +114,10 @@ calculate_new_color_component:
         ;xmm2 -  czesc nowej skladowej z dolnego obrazka
         addss   xmm1, xmm2 ; alfa*R/G/B + (1-alfa)*R/G/B
 
-        cvttss2si ebx, xmm1 ; conversion to int
-        mov     [r14], bl; r14 - adres w tabeli pikseli obrazka_nad
+        cvttss2si r12d, xmm1 ; conversion to int
+        mov     [r14], r12b; zapisz wynik (r14 - adres w tabeli pikseli obrazka_nad)
+
+        jmp components_loop
 
 
 fin:
