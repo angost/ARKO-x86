@@ -6,10 +6,10 @@
 ; RCX - uint16_t height -> cx
 ; R8 - uint16_t x_input -> r8w
 ; R9 - uint16_t y_input -> r9w
-; XMM0 - float alpha_temporary ALPHA - 32b
 section .data
         one dd 1.0
         two dd 2.0
+        scale dd 20.0
 
 section .bss
         sin_arg resd 1 ; 4B * 1
@@ -37,7 +37,10 @@ next_row:
 
         mov     r15w, r9w ; y_input
         sub     r15w, r11w ; y_input - y
+        jns     square_difference_y
+        neg     r15w ; r15: |y1-y2|
 
+square_difference_y:
         ; (y1-y2)^2
         mov     r12w, dx
         mov    ax, r15w
@@ -46,8 +49,6 @@ next_row:
         mov     r15d, edx
         mov     r15w, ax
         mov     dx, r12w
-        ;jns     next_column
-        ;neg     r15w ; r15: |y1-y2|
 
 ; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
 
@@ -58,7 +59,10 @@ next_column:
 
         mov     r12w, r8w ; x_input
         sub     r12w, r10w ; x_input - x
+        jns     square_difference_x
+        neg     r12w ; r12: |x1-x2|
 
+square_difference_x:
         ; (x1-x2)^2
         mov     r14w, dx
         mov     ax, r12w
@@ -67,27 +71,39 @@ next_column:
         mov     r12d, edx
         mov     r12w, ax
         mov     dx, r14w
-        ;jns     calculate_alpha
-        ;neg     r12w ; r12: |x1-x2|
+
 
 calculate_alpha:
         ; CALCULATE DISTANCE
         add     r12w, r15w ; [(x1-x2)^2 + (y1-y2)^2]
-        cvtsi2ss xmm3, r12d
-        sqrtss  xmm3, xmm3 ; xmm3 - sqrt([(x1-x2)^2 + (y1-y2)^2])
+        cvtsi2ss xmm0, r12d
+        sqrtss  xmm0, xmm0 ; xmm0 - sqrt([(x1-x2)^2 + (y1-y2)^2])
+sqrt:
+        ; skalowanie dystansu, zeby mala zmiana odleglosci nie maial az takiego wplywu na zmiane sinusa
+        movd    xmm3, [scale]
+        divss   xmm0, xmm3
+divided:
         ; CALCULATE ALPHA (przeksztalcony sinus)
         fldpi   ; pi
+td1:
         fdiv    dword [two] ;pi/2
-        movd    [sin_arg], xmm3
+td2:
+        movd    [sin_arg], xmm0
+td3:
         fadd    dword [sin_arg] ; pi/2 + distance
+pi_plus_distance:
         fsin    ; sin(pi/2 + distance)
+sinused:
         fadd    dword [one] ; sin(pi/2 + distance) + 1
         fdiv    dword [two] ; [sin(pi/2 + distance) + 1]/2
-        fst     dword [alpha_calculated]
-        movd    xmm3, [alpha_calculated]
-
+halfed:
+        fstp     dword [alpha_calculated]
+        movd    xmm0, [alpha_calculated]
+finished:
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
+
+; PROBLEM - JEST ZE STOSEM, MUSZE POPOWAC RZECZY ZE STOSU JAK SKONCZE
 calculate_offset_in_pixel_array:
         mov     r13w, r11w ; r13 = y
         mov     ax, r13w
@@ -142,6 +158,7 @@ calculate_new_color_component:
                 ;fld1 ; wrzucenie 1.0 na stos
                 ;movdqa [temp], xmm0
         ;-----------------------------
+from_picture_under:
         mulss   xmm2, xmm1 ; xmm2 = (1-alfa)*R/G/B
 
         ; picture above
@@ -150,6 +167,7 @@ calculate_new_color_component:
         movzx   r12d, al ; conversion of color component to float
         cvtsi2ss xmm1, r12d ; trzymam skladowa obrazka_pod we floacie w xmm2
         ; obliczenie nowej skladowej part2
+from_picture_above:
         mulss   xmm1, xmm0 ; xmm2 = alfa*R/G/B
 
         ;xmm1 -  czesc nowej skladowej z gornego obrazka
@@ -158,6 +176,7 @@ calculate_new_color_component:
 
         cvttss2si r12d, xmm1 ; conversion to int
         mov     [r14], r12b; zapisz wynik (r14 - adres w tabeli pikseli obrazka_nad)
+color:
 
         jmp components_loop
 

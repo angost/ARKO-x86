@@ -3,7 +3,7 @@
 #include <allegro5/allegro_primitives.h>
 
 // arg: wskaznik na tablice pikseli 1 i 2, wymiary obrazkow, wybrany pkt odniesienia
-void f(uint8_t *pixels_picture_under, uint8_t *pixels_picture_above, uint16_t width, uint16_t height, uint16_t x, uint16_t y, float alpha_temporary);
+void f(uint8_t *pixels_picture_under, uint8_t *pixels_picture_above, uint16_t width, uint16_t height, uint16_t x, uint16_t y);
 
 
 void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above){
@@ -61,7 +61,14 @@ int main(int argc, char *argv[])
     if (!al_init())
         return -1;
     display = al_create_display(width, height);
-    al_init_primitives_addon();
+    al_init_primitives_addon();/*
+    ALLEGRO_TRANSFORM transform;
+    al_identity_transform(&transform);
+    float sx = 1.5;
+    float sy = 1.5;
+    al_scale_transform(&transform, sx, sy);
+    al_translate_transform(&transform, 100, 0);
+    al_use_transform(&transform);*/
 
     uint16_t input_coords[2];
 
@@ -87,9 +94,7 @@ int main(int argc, char *argv[])
         al_rest(5.0);
 
         // INPUT: WYBIERZ PUNKT ODNIESIENIA
-        float alpha_temporary = 0.5;
         get_input(input_coords);
-        //float alpha_temporary = 0.5;
         printf("x: %d, y: %d\n", input_coords[0], input_coords[1]);
 
         // skopiuj poczatkowy obrazek
@@ -97,7 +102,7 @@ int main(int argc, char *argv[])
             pixels_result_picture[i] = pixels_picture_above[i];
         }
         // ASSEMBLER, PRZETWORZ
-        f(pixels_picture_under, pixels_result_picture, width, height, input_coords[0], input_coords[1], alpha_temporary);
+        f(pixels_picture_under, pixels_result_picture, width, height, input_coords[0], input_coords[1]);
     }
 
     al_destroy_display(display);
