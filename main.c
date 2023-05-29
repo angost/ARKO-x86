@@ -28,19 +28,29 @@ void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above
     }
 }
 
-void get_input(uint16_t *input_coords){
-    int x_input;
-    int y_input;
-    printf("Enter x: ");
-    scanf("%d", &x_input);
-    printf("Enter y: ");
-    scanf("%d", &y_input);
-    uint16_t x = x_input & 0xffff;
-    uint16_t y = y_input & 0xffff;
+void get_input(uint16_t *input_coords, uint16_t width, uint16_t height){
+    int x_input = -2;
+    int y_input = -2;
 
-    input_coords[0] = x;
-    input_coords[1] = y;
+    while (x_input < -1 || x_input >= width ){
+        printf("Enter x between <0, %d>: ", width-1);
+        scanf("%d", &x_input);
+    }
+    while (y_input < -1 || y_input >= height ){
+        printf("Enter y between <0, %d>: ", height-1);
+        scanf("%d", &y_input);
+    }
 
+    if (x_input == -1 || y_input == -1){
+        input_coords[0] = -1;
+        input_coords[1] = -1;
+    } else {
+        uint16_t x = x_input & 0xffff;
+        uint16_t y = y_input & 0xffff;
+
+        input_coords[0] = x;
+        input_coords[1] = y;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -61,25 +71,17 @@ int main(int argc, char *argv[])
     if (!al_init())
         return -1;
     display = al_create_display(width, height);
-    al_init_primitives_addon();/*
-    ALLEGRO_TRANSFORM transform;
-    al_identity_transform(&transform);
-    float sx = 1.5;
-    float sy = 1.5;
-    al_scale_transform(&transform, sx, sy);
-    al_translate_transform(&transform, 100, 0);
-    al_use_transform(&transform);*/
+    al_init_primitives_addon();
 
     uint16_t input_coords[2];
+    input_coords[0] = -2; input_coords[1] = -2;
 
-
-    // skopiuj poczatkowy obrazek - ROBOCZO
+    // skopiuj poczatkowy obrazek
     for (int i = 0; i < pixel_array_len; i++){
         pixels_result_picture[i] = pixels_picture_above[i];
     }
 
-    int max_loop_nr = 5;
-    for (int loop_nr = 0; loop_nr < max_loop_nr; loop_nr++) {
+    while (input_coords[0] != -1 && input_coords[1] != -1) {
         // WYSWIETLANIE
         // Konwencja w Allegro : 00 to lewy gorny
         for (int row = 0; row < height; row++){
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
         al_rest(5.0);
 
         // INPUT: WYBIERZ PUNKT ODNIESIENIA
-        get_input(input_coords);
+        get_input(input_coords, width, height);
         printf("x: %d, y: %d\n", input_coords[0], input_coords[1]);
 
         // skopiuj poczatkowy obrazek
@@ -108,12 +110,3 @@ int main(int argc, char *argv[])
     al_destroy_display(display);
     return 0;
 }
-
-    // initDefaultParams(&x, &y);
-    // uint8_t pPixelArray = allocPixelArray(WIDTH, HEIGHT);
-    // while(true) {
-    //     performAlgorithm(pPixelArray, WIDTH, HEIGHT, x, y, z);
-    //     displayResult(pPixelArray, WIDTH, HEIGHT);
-    //     waitForUserInput(?);
-    //     modifyParamsAccordingToUserInput(&x, &y, &z, ?);
-    // }
