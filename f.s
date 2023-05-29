@@ -8,7 +8,7 @@
 ; R9 - uint16_t y_input
 ; XMM0 - float alpha_temporary ALPHA - 32b
 section .data
-        temp resq 2
+        ;temp resq 2
         one dd 1.0
 
 section .text
@@ -34,8 +34,6 @@ f:
 ; = x=0, wszystkie y, x=1, wszystkie y, ...
 
 current_coords:
-        add     r10, 4
-        add     r11, 2
 next_column:
         mov     r12, r8
         sub     r12, r10
@@ -56,20 +54,22 @@ calculate_addr_in_pixel_array:
 
 ;TODO zmienic kolejnosc zeby w r14 miec adres tablicy obrazka nad
 get_previous_color_components: ; loop dla kolejno r,g,b
-; pobieram skladowa z obrazka_nad i obrazka_pod
+        ;adres skladowej = pierwszy el + offset + nr_skladowej
+        ; dla obrazka_pod
         movzx   r14, bl
         add     r14, r13
-        add     r14, rsi ; rsi - pierwszy el w tablicy obrazka_nad
-        ;adres skladowej = pierwszy el + offset + nr_skladowej
+        add     r14, rdi ; rdi - pierwszy el w tablicy
         mov     al, [r14]
         mov     ah, 0
         mov     ah, al
 
+        ; dla obrazka_nad
         movzx   r14, bl
         add     r14, r13
-        add     r14, rdi ; rdi - pierwszy el w tablicy obrazka_pod
-        ;adres skladowej = pierwszy el + offset + nr_skladowej
+        add     r14, rsi ; rsi - pierwszy el w tablicy
+
         mov     al, [r14]
+        xchg    al, ah
 
         ; ah - obrazek_nad, al - obrazek_pod
 
@@ -99,8 +99,8 @@ calculate_new_color_component:
         ;xmm2 -  czesc nowej skladowej z dolnego obrazka
         addss   xmm1, xmm2 ; alfa*R/G/B + (1-alfa)*R/G/B
 
-        ;cvtss2si ebx, xmm1 ; conversion to int
-        ;and     ebx, 0xFF
+        cvttss2si ebx, xmm1 ; conversion to int
+        mov     [r14], bl; r14 - adres w tabeli pikseli obrazka_nad
 
 
 fin:
