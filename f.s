@@ -43,7 +43,7 @@ next_row:
 square_difference_y:
         ; (y1-y2)^2
         mov     r12w, dx
-        mov    ax, r15w
+        mov     ax, r15w
         mul     r15w
         shl     edx, 16
         mov     r15d, edx
@@ -55,7 +55,7 @@ square_difference_y:
 next_column:
         inc     r10w ; x++
         cmp     r10w, dx ; x==width?
-        je     next_row
+        je      next_row
 
         mov     r12w, r8w ; x_input
         sub     r12w, r10w ; x_input - x
@@ -103,7 +103,7 @@ finished:
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
 
-; PROBLEM - JEST ZE STOSEM, MUSZE POPOWAC RZECZY ZE STOSU JAK SKONCZE
+; sprobowac znalezc alfa dla x=320,y=250 i wieksze y, jest nagly spadek a do 0
 calculate_offset_in_pixel_array:
         mov     r13w, r11w ; r13 = y
         mov     ax, r13w
