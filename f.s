@@ -75,35 +75,26 @@ square_difference_x:
 
 calculate_alpha:
         ; CALCULATE DISTANCE
-        add     r12w, r15w ; [(x1-x2)^2 + (y1-y2)^2]
+        add     r12d, r15d ; [(x1-x2)^2 + (y1-y2)^2]
         cvtsi2ss xmm0, r12d
         sqrtss  xmm0, xmm0 ; xmm0 - sqrt([(x1-x2)^2 + (y1-y2)^2])
-sqrt:
+
         ; skalowanie dystansu, zeby mala zmiana odleglosci nie maial az takiego wplywu na zmiane sinusa
         movd    xmm3, [scale]
         divss   xmm0, xmm3
-divided:
         ; CALCULATE ALPHA (przeksztalcony sinus)
         fldpi   ; pi
-td1:
         fdiv    dword [two] ;pi/2
-td2:
         movd    [sin_arg], xmm0
-td3:
         fadd    dword [sin_arg] ; pi/2 + distance
-pi_plus_distance:
         fsin    ; sin(pi/2 + distance)
-sinused:
         fadd    dword [one] ; sin(pi/2 + distance) + 1
         fdiv    dword [two] ; [sin(pi/2 + distance) + 1]/2
-halfed:
         fstp     dword [alpha_calculated]
         movd    xmm0, [alpha_calculated]
-finished:
+
 ; mam aktualne x,y
 ; obliczam indeks w tablicy pikseli
-
-; sprobowac znalezc alfa dla x=320,y=250 i wieksze y, jest nagly spadek a do 0
 calculate_offset_in_pixel_array:
         mov     r13w, r11w ; r13 = y
         mov     ax, r13w
@@ -175,9 +166,12 @@ from_picture_above:
         addss   xmm1, xmm2 ; alfa*R/G/B + (1-alfa)*R/G/B
 
         cvttss2si r12d, xmm1 ; conversion to int
-        mov     [r14], r12b; zapisz wynik (r14 - adres w tabeli pikseli obrazka_nad)
-color:
+        cmp     r12w, 255
+        jle      save_color
+        mov     r12b, 255
 
+save_color:
+        mov     [r14], r12b; zapisz wynik (r14 - adres w tabeli pikseli obrazka_nad)
         jmp components_loop
 
 
