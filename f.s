@@ -22,7 +22,6 @@ f:
 ; prolog
         push rbx
         push r12
-        push r13
         push r14
         push r15
         mov   r11w, -1 ; licznik aktualnego wiersza (y) - uint16_t
@@ -33,7 +32,7 @@ next_row:
         cmp     r11w, cx ; y==height?
         je      fin
 
-        mov   r10w, -1 ; licznik aktualnej kolumny (x) - uint16_t
+        mov     r10w, -1 ; licznik aktualnej kolumny (x) - uint16_t
 
         mov     r15w, r9w ; y_input
         sub     r15w, r11w ; y_input - y
@@ -49,8 +48,6 @@ square_difference_y:
         mov     r15d, edx
         mov     r15w, ax
         mov     dx, r12w
-
-; TODO: przeniesc tutaj obliczanie r13, w next_column zwiekszac go o 3
 
 next_column:
         inc     r10w ; x++
@@ -72,14 +69,13 @@ square_difference_x:
         mov     r12w, ax
         mov     dx, r14w
 
-
 calculate_alpha:
         ; CALCULATE DISTANCE
         add     r12d, r15d ; [(x1-x2)^2 + (y1-y2)^2]
         cvtsi2ss xmm0, r12d
         sqrtss  xmm0, xmm0 ; xmm0 - sqrt([(x1-x2)^2 + (y1-y2)^2])
 
-        ; skalowanie dystansu, zeby mala zmiana odleglosci nie maial az takiego wplywu na zmiane sinusa
+        ; skalowanie dystansu, zeby mala zmiana odleglosci nie mial az takiego wplywu na zmiane sinusa
         movd    xmm3, [scale]
         divss   xmm0, xmm3
         ; CALCULATE ALPHA (przeksztalcony sinus)
@@ -93,23 +89,7 @@ calculate_alpha:
         fstp     dword [alpha_calculated]
         movd    xmm0, [alpha_calculated]
 
-; mam aktualne x,y
-; obliczam indeks w tablicy pikseli
-calculate_offset_in_pixel_array:
-        mov     r13w, r11w ; r13 = y
-        mov     ax, r13w
-        mov     r12w, dx ; zachowuje gdzies rdx, bo nadpisze sie przy mnozeniu
-        mul     dx ; r13 = y*width
-        ; wynik mnozenia 16b*16b jest 32b, jest w dx i ax, nizej operacje zeby zapisac te wyniki w r13
-        shl     edx, 16
-        mov     r13d, edx
-        mov     r13w, ax
-        ; restore rdx
-        mov     dx, r12w
-
-        add     r13d, r10d ; r13 = y*width + x
-        lea     r13d, [r13d + r13d*2] ;  r13 = (y*width + x)*3
-
+loop_setup:
         mov     bl, -1 ; iteracja petli zmieniania skladowych r,g,b
 
 components_loop:
@@ -117,22 +97,18 @@ components_loop:
         cmp     bl, 3
         je      next_column
 
+        ; Updating pointers to current elements
+        inc     rdi ; pixels_picture_under
+        inc     rsi ; pixels_picture_above
+
 get_previous_color_components: ; loop dla kolejno r,g,b
-        ;adres skladowej = pierwszy el + offset + nr_skladowej
         ; dla obrazka_pod
-        movzx   r14, bl
-        add     r14, r13
-        add     r14, rdi ; rdi - pierwszy el w tablicy
-        mov     al, [r14]
+        mov     al, [rdi]
         mov     ah, 0
         mov     ah, al
 
         ; dla obrazka_nad
-        movzx   r14, bl
-        add     r14, r13
-        add     r14, rsi ; rsi - pierwszy el w tablicy
-
-        mov     al, [r14]
+        mov     al, [rsi]
         xchg    al, ah
 
         ; ah - obrazek_nad, al - obrazek_pod
@@ -145,11 +121,6 @@ calculate_new_color_component:
         ; obliczenie nowej skladowej part1
         movss   xmm1, dword [one]
         subss   xmm1, xmm0 ; 1 - alfa
-        ;--dzialalo tez cos takiego---
-                ;fld1 ; wrzucenie 1.0 na stos
-                ;movdqa [temp], xmm0
-        ;-----------------------------
-from_picture_under:
         mulss   xmm2, xmm1 ; xmm2 = (1-alfa)*R/G/B
 
         ; picture above
@@ -158,7 +129,6 @@ from_picture_under:
         movzx   r12d, al ; conversion of color component to float
         cvtsi2ss xmm1, r12d ; trzymam skladowa obrazka_pod we floacie w xmm2
         ; obliczenie nowej skladowej part2
-from_picture_above:
         mulss   xmm1, xmm0 ; xmm2 = alfa*R/G/B
 
         ;xmm1 -  czesc nowej skladowej z gornego obrazka
@@ -171,15 +141,12 @@ from_picture_above:
         mov     r12b, 255
 
 save_color:
-        mov     [r14], r12b; zapisz wynik (r14 - adres w tabeli pikseli obrazka_nad)
+        mov     [rsi], r12b; zapisz wynik (rsi - adres w tabeli pikseli obrazka_nad)
         jmp components_loop
 
-
 fin:
-        ;mov     rax, rdi      ZAKOMENTOWANE BO NIE CHCE NIC ZWRACAC?  ; return the original arg
         pop r15
         pop r14
-        pop r13
         pop r12
         pop rbx
         ret
