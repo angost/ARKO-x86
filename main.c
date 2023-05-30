@@ -28,6 +28,20 @@ void setup_picture_above(uint32_t pixel_array_len, uint8_t *pixels_picture_above
     }
 }
 
+void setup_picture_under(uint32_t pixel_array_len, uint8_t *pixels_picture_under){
+    int i = 0;
+    /*
+    for (int i = 0; i < pixel_array_len; i++) {
+        int remainder = i % 3;
+        if (remainder == 0)
+            pixels_picture_under[i] = 37;
+        else if (remainder == 1)
+            pixels_picture_under[i] = 137;
+        else
+            pixels_picture_under[i] = 250;
+    }*/
+}
+
 // Pobiera koordynaty pktu odniesienia / konczy program jesli x v y = -1
 int get_input(uint16_t *input_coords, uint16_t width, uint16_t height){
     int x_input = -2;
@@ -61,11 +75,12 @@ int main(int argc, char *argv[])
     uint32_t pixel_array_len = width * height * 3;
     // Tablice pikseli obu obrazkow, ustawianie ich poczatkowych wartosci
     // Konwencja: R,G,B; kolejnosc od lewej do prawej, od gory do dolu
-    uint8_t pixels_picture_under[pixel_array_len];
     uint8_t pixels_picture_above[pixel_array_len];
+    uint8_t pixels_picture_under[pixel_array_len];
     uint8_t pixels_result_picture[pixel_array_len];
 
     setup_picture_above(pixel_array_len, pixels_picture_above);
+    setup_picture_under(pixel_array_len, pixels_picture_under);
 
     ALLEGRO_DISPLAY *display = NULL;
     if (!al_init())
