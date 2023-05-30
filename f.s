@@ -102,13 +102,14 @@ components_loop:
         inc     rsi ; pixels_picture_above
 
 get_previous_color_components: ; loop dla kolejno r,g,b
+        ; TUTAJ NA NOWO BY TO MOZNA BYLO ZROBIC, TA KOLEJNOSC I PRZESUWANIE AL, AH WYNIKA Z WCZESNIEJSZEGO OBLICZANIA ADRESOW
         ; dla obrazka_pod
         mov     al, [rdi]
         mov     ah, 0
         mov     ah, al
 
         ; dla obrazka_nad
-        mov     al, [rsi]
+        mov     ah, [rsi]
         xchg    al, ah
 
         ; ah - obrazek_nad, al - obrazek_pod
